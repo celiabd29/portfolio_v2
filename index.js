@@ -1,4 +1,3 @@
-import react from "react";
 import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
@@ -6,6 +5,7 @@ import cors from "cors";
 import User from "./models/User.js";
 import Skill from "./models/Skill.js";
 import jwt from "jsonwebtoken";
+import skillRoutes from "./routes/skillRoutes.js";
 
 dotenv.config();
 console.log("MONGO_URI:", process.env.MONGO_URI);
@@ -194,9 +194,12 @@ app.post("/skills", async (req, res) => {
     res.status(500).json({ message: "Erreur serveur", error });
   }
 });
+// Utilisation des routes
+app.use("/skills", skillRoutes);
+
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Serveur démarré sur le port ${PORT}`);
+const server = app.listen(process.env.PORT || 4000, () => {
+  console.log(`✅ Serveur démarré sur le port ${process.env.PORT || 4000}`);
 });
 server.keepAliveTimeout = 120 * 1000; // 120 secondes
 server.headersTimeout = 120 * 1000;
