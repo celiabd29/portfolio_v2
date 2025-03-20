@@ -18,11 +18,17 @@ router.get("/", async (req, res) => {
 router.post("/add", async (req, res) => {
   try {
     const { name, icon, category } = req.body;
+    if (!name || !icon || !category) {
+      return res.status(400).json({ error: "Tous les champs sont requis" });
+    }
+
     const newSkill = new Skill({ name, icon, category });
     await newSkill.save();
+
     res.status(201).json({ message: "Compétence ajoutée avec succès !" });
   } catch (error) {
-    res.status(500).json({ error: "Erreur lors de l'ajout de la compétence" });
+    console.error("Erreur lors de l'ajout de la compétence :", error);
+    res.status(500).json({ error: "Erreur interne du serveur" });
   }
 });
 
