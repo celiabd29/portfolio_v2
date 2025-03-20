@@ -1,3 +1,4 @@
+import react from "react";
 import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
@@ -193,7 +194,11 @@ app.post("/skills", async (req, res) => {
     res.status(500).json({ message: "Erreur serveur", error });
   }
 });
-const PORT = process.env.PORT || 4000; // Render attribuera un port si dispo, sinon 4000
-app.listen(PORT, () => console.log(`🚀 Serveur démarré sur le port ${PORT}`));
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Serveur démarré sur le port ${PORT}`);
+});
+server.keepAliveTimeout = 120 * 1000; // 120 secondes
+server.headersTimeout = 120 * 1000;
 // Exporter l'app pour Vercel
 export default app;
