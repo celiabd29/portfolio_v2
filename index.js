@@ -217,9 +217,9 @@ app.get("/projects", async (req, res) => {
   res.json(projects);
 });
 
-const server = app.listen(process.env.PORT || 4000, () => {
-  console.log(`✅ Serveur démarré sur le port ${process.env.PORT || 4000}`);
-});
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => console.log(`🚀 Serveur lancé sur le port ${PORT}`));
+
 server.keepAliveTimeout = 120 * 1000; // 120 secondes
 server.headersTimeout = 120 * 1000;
 // Exporter l'app pour Vercel
