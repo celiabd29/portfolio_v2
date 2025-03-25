@@ -5,7 +5,7 @@ import cors from "cors";
 import User from "./models/User.js";
 import Skill from "./models/Skill.js";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 import projectRoutes from "./routes/projectRoutes.js";
 import skillRoutes from "./routes/skillRoutes.js";
