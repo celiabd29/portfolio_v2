@@ -1,35 +1,39 @@
-const express = require("express");
+import express from "express";
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
+import Skill from "../models/Skill.js";
+
 const router = express.Router();
-const Skill = require("../models/Skill");
 
-// Tester si la route fonctionne
-router.get("/", async (req, res) => {
-  try {
-    const skills = await Skill.find();
-    res.json(skills);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Erreur lors de la récupération des compétences" });
-  }
+// Récupération du __dirname en ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Multer setup
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, "../uploads/skills/"));
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + ext);
+  },
 });
+const upload = multer({ storage });
 
-// Route pour ajouter une compétence
-router.post("/add", async (req, res) => {
+router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { name, icon, category } = req.body;
-    if (!name || !icon || !category) {
-      return res.status(400).json({ error: "Tous les champs sont requis" });
-    }
+    const { nom, categorie } = req.body;
+    const image = req.file ? req.file.filename : null;
 
-    const newSkill = new Skill({ name, icon, category });
+    const newSkill = new Skill({ nom, image, categorie });
     await newSkill.save();
 
-    res.status(201).json({ message: "Compétence ajoutée avec succès !" });
-  } catch (error) {
-    console.error("Erreur lors de l'ajout de la compétence :", error);
-    res.status(500).json({ error: "Erreur interne du serveur" });
+    res.status(201).json(newSkill);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-module.exports = router;
+export default router;

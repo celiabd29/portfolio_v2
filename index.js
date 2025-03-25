@@ -5,17 +5,34 @@ import cors from "cors";
 import User from "./models/User.js";
 import Skill from "./models/Skill.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+
+import projectRoutes from "./routes/projectRoutes.js";
 import skillRoutes from "./routes/skillRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Pour récupérer le bon __dirname (ESM)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
-console.log("MONGO_URI:", process.env.MONGO_URI);
-
-const JWT_SECRET = process.env.JWT_SECRET;
 const app = express();
+const PORT = process.env.PORT || 4000;
 
 // Middleware
-app.use(express.json());
+app.use(express.json()); // Pour traiter les JSON
+app.use(express.urlencoded({ extended: true })); // Pour traiter les formulaires
 app.use(cors());
+// Utilisation des routes
+app.use("/skills", skillRoutes);
+app.use("/messages", messageRoutes);
+app.use("/uploads", express.static("uploads"));
+app.use("/projects", projectRoutes);
+
+console.log("MONGO_URI:", process.env.MONGO_URI);
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Connexion à MongoDB
 const connectDB = async () => {
@@ -194,10 +211,12 @@ app.post("/skills", async (req, res) => {
     res.status(500).json({ message: "Erreur serveur", error });
   }
 });
-// Utilisation des routes
-app.use("/skills", skillRoutes);
 
-const PORT = process.env.PORT || 4000;
+app.get("/projects", async (req, res) => {
+  const projects = await Project.find();
+  res.json(projects);
+});
+
 const server = app.listen(process.env.PORT || 4000, () => {
   console.log(`✅ Serveur démarré sur le port ${process.env.PORT || 4000}`);
 });
