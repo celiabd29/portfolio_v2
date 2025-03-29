@@ -28,5 +28,29 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+// ✅ Marquer comme lu ou non lu
+router.put("/:id/read", async (req, res) => {
+  try {
+    const { isRead } = req.body;
+    const updated = await Message.findByIdAndUpdate(
+      req.params.id,
+      { isRead },
+      { new: true }
+    );
+    res.status(200).json(updated);
+  } catch (error) {
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// ✅ Supprimer un message
+router.delete("/:id", async (req, res) => {
+  try {
+    await Message.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "Message supprimé avec succès" });
+  } catch (error) {
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
 
 export default router;

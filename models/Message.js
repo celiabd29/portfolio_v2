@@ -5,6 +5,7 @@ const messageSchema = new mongoose.Schema({
   email: { type: String, required: true },
   message: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
+  isRead: { type: Boolean, default: false }, // ✅ ajouté
 });
 
 const Message = mongoose.model("Message", messageSchema);
