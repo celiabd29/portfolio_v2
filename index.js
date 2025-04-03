@@ -24,11 +24,12 @@ const PORT = process.env.PORT || 4000;
 // Middleware
 app.use(express.json()); // Pour traiter les JSON
 app.use(express.urlencoded({ extended: true })); // Pour traiter les formulaires
-app.use(cors());
+app.use(cors({ origin: "*" }));
 // Utilisation des routes
 app.use("/skills", skillRoutes);
 app.use("/messages", messageRoutes);
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 app.use("/projects", projectRoutes);
 
 console.log("MONGO_URI:", process.env.MONGO_URI);
