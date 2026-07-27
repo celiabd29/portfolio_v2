@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none">
+  <defs>
+    <linearGradient id="mania" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a1030"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#mania)"/>
+  <g stroke="#8b5cf6" stroke-width="2" opacity="0.35">
+    <line x1="140" y1="120" x2="260" y2="90"/>
+    <line x1="260" y1="90" x2="360" y2="150"/>
+    <line x1="360" y1="150" x2="500" y2="110"/>
+    <line x1="500" y1="110" x2="640" y2="160"/>
+  </g>
+  <g fill="#a78bfa">
+    <circle cx="140" cy="120" r="6"/>
+    <circle cx="260" cy="90" r="6"/>
+    <circle cx="360" cy="150" r="6"/>
+    <circle cx="500" cy="110" r="6"/>
+    <circle cx="640" cy="160" r="6"/>
+  </g>
+  <text x="400" y="250" font-family="Arial, sans-serif" font-size="72" font-weight="800" fill="#ffffff" text-anchor="middle">MANIA</text>
+  <text x="400" y="300" font-family="Arial, sans-serif" font-size="24" fill="#c4b5fd" text-anchor="middle">Prospection B2B propulsée par l'IA</text>
+  <text x="400" y="360" font-family="Arial, sans-serif" font-size="18" fill="#8b5cf6" text-anchor="middle">API Claude · n8n · Vector store</text>
+</svg>

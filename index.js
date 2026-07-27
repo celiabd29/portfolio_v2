@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import projectRoutes from "./routes/projectRoutes.js";
 import skillRoutes from "./routes/skillRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import authMiddleware from "./middleware/authMiddleware.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -122,20 +123,6 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Middleware pour protéger les routes
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "Accès refusé" });
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.status(403).json({ message: "Token invalide" });
-  }
-};
-
 // Route protégée (profil utilisateur)
 app.get("/profile", authMiddleware, async (req, res) => {
   try {
@@ -197,7 +184,7 @@ app.get("/skills", async (req, res) => {
 });
 
 // ➤ Route pour ajouter une compétence
-app.post("/skills", async (req, res) => {
+app.post("/skills", authMiddleware, async (req, res) => {
   try {
     const { category, name, icon } = req.body;
     if (!category || !name || !icon) {

@@ -7,7 +7,7 @@ const skillSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ["Développement Web", "Graphisme & UX/UI"],
+    enum: ["Développement Web", "Graphisme & UX/UI", "IA & Automatisation"],
     required: true,
   },
   image: {
