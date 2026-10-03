@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import projectRoutes from "./routes/projectRoutes.js";
 import skillRoutes from "./routes/skillRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import bipRoutes from "./routes/bipRoutes.js";
 import authMiddleware from "./middleware/authMiddleware.js";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -22,13 +23,17 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Render est derrière un proxy : nécessaire pour le rate limit par IP (Bip)
+app.set("trust proxy", 1);
+
 // Middleware
-app.use(express.json()); // Pour traiter les JSON
+app.use(express.json({ limit: "4kb" })); // Pour traiter les JSON (payload limité)
 app.use(express.urlencoded({ extended: true })); // Pour traiter les formulaires
 app.use(cors({ origin: "*" }));
 // Utilisation des routes
 app.use("/skills", skillRoutes);
 app.use("/messages", messageRoutes);
+app.use("/bip", bipRoutes); // => POST /bip/ask
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/projects", projectRoutes);
