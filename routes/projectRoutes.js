@@ -1,7 +1,8 @@
 import express from "express";
 import multer from "multer";
 import Project from "../models/Project.js";
-import authMiddleware from "../middleware/authMiddleware.js";
+import adminAuth from "../middleware/adminAuth.js";
+import { adminLimiter } from "../middleware/rateLimit.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -27,7 +28,7 @@ router.get("/", async (req, res) => {
 });
 
 // ➕ Route POST pour ajouter un projet
-router.post("/add", authMiddleware, upload.single("image"), async (req, res) => {
+router.post("/add", adminLimiter, adminAuth, upload.single("image"), async (req, res) => {
   try {
     const { title, description, technologies, link, category } = req.body;
     const image = req.file.filename;
@@ -49,7 +50,7 @@ router.post("/add", authMiddleware, upload.single("image"), async (req, res) => 
   }
 });
 // ➕ Route pour modifier un projet
-router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
+router.put("/:id", adminLimiter, adminAuth, upload.single("image"), async (req, res) => {
   try {
     const { title, description, technologies, link, category } = req.body;
     const updatedData = {
@@ -80,7 +81,7 @@ router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
 });
 
 // DELETE un projet par ID
-router.delete("/:id", authMiddleware, async (req, res) => {
+router.delete("/:id", adminLimiter, adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
     await Project.findByIdAndDelete(id);

@@ -1,7 +1,8 @@
 import express from "express";
 import multer from "multer";
 import Skill from "../models/Skill.js";
-import authMiddleware from "../middleware/authMiddleware.js";
+import adminAuth from "../middleware/adminAuth.js";
+import { adminLimiter } from "../middleware/rateLimit.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -29,7 +30,7 @@ router.get("/", async (req, res) => {
 });
 
 // ➕ POST - Ajouter une compétence
-router.post("/add", authMiddleware, upload.single("image"), async (req, res) => {
+router.post("/add", adminLimiter, adminAuth, upload.single("image"), async (req, res) => {
   try {
     const { name, category } = req.body;
     const image = req.file.filename;
@@ -49,7 +50,7 @@ router.post("/add", authMiddleware, upload.single("image"), async (req, res) => 
 });
 
 // 🔄 PUT - Modifier une compétence
-router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
+router.put("/:id", adminLimiter, adminAuth, upload.single("image"), async (req, res) => {
   try {
     const { name, category } = req.body;
     const updatedData = { name, category };
@@ -70,7 +71,7 @@ router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
 });
 
 // ❌ DELETE - Supprimer une compétence
-router.delete("/:id", authMiddleware, async (req, res) => {
+router.delete("/:id", adminLimiter, adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
     await Skill.findByIdAndDelete(id);

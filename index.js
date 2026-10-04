@@ -2,6 +2,7 @@ import "dotenv/config"; // charge .env avant tout autre import (ex. client Anthr
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import helmet from "helmet";
 import User from "./models/User.js";
 import Skill from "./models/Skill.js";
 import jwt from "jsonwebtoken";
@@ -12,6 +13,8 @@ import skillRoutes from "./routes/skillRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import bipRoutes from "./routes/bipRoutes.js";
 import authMiddleware from "./middleware/authMiddleware.js";
+import adminAuth from "./middleware/adminAuth.js";
+import { adminLimiter } from "./middleware/rateLimit.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -25,10 +28,28 @@ const PORT = process.env.PORT || 4000;
 // Render est derrière un proxy : nécessaire pour le rate limit par IP (Bip)
 app.set("trust proxy", 1);
 
+// En-têtes de sécurité. On autorise le chargement cross-origin des ressources
+// (les images de /uploads sont servies au front, sur un autre domaine).
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+
+// CORS limité aux domaines autorisés (variable ALLOWED_ORIGINS, séparés par des virgules).
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+app.use(
+  cors({
+    origin(origin, cb) {
+      // Requêtes sans origine (curl, same-origin, health checks) autorisées.
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error("Origine non autorisée par CORS"));
+    },
+  })
+);
+
 // Middleware
 app.use(express.json({ limit: "4kb" })); // Pour traiter les JSON (payload limité)
-app.use(express.urlencoded({ extended: true })); // Pour traiter les formulaires
-app.use(cors({ origin: "*" }));
+app.use(express.urlencoded({ extended: true, limit: "4kb" })); // formulaires (taille limitée)
 // Utilisation des routes
 app.use("/skills", skillRoutes);
 app.use("/messages", messageRoutes);
@@ -37,7 +58,6 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/projects", projectRoutes);
 
-console.log("MONGO_URI:", process.env.MONGO_URI);
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Connexion à MongoDB
@@ -56,21 +76,6 @@ const connectDB = async () => {
 
 connectDB();
 
-// Générer un token JWT pour un utilisateur
-const token = jwt.sign({ userId: "1234" }, JWT_SECRET, { expiresIn: "1h" });
-
-console.log("Token généré :", token);
-
-const verifyToken = (token) => {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    console.log("✅ Token valide :", decoded);
-    return decoded;
-  } catch (error) {
-    console.error("❌ Token invalide :", error);
-    return null;
-  }
-};
 // ✅ Route de santé : réveille le serveur Render (pas d'auth, pas de DB)
 app.get("/health", (req, res) => {
   res.status(200).json({ ok: true });
@@ -81,8 +86,8 @@ app.get("/", (req, res) => {
   res.send("🚀 Backend Portfolio fonctionne !");
 });
 
-// Route d'inscription
-app.post("/register", async (req, res) => {
+// Route d'inscription (réservée à l'administration : pas d'inscription publique)
+app.post("/register", adminLimiter, adminAuth, async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
@@ -146,7 +151,7 @@ app.get("/profile", authMiddleware, async (req, res) => {
 });
 
 // ✅ Routes API : Préfixe `/api`
-app.get("/api/users", async (req, res) => {
+app.get("/api/users", adminLimiter, adminAuth, async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
@@ -156,9 +161,7 @@ app.get("/api/users", async (req, res) => {
 });
 
 // ✅ Route pour créer un utilisateur
-app.post("/api/users", async (req, res) => {
-  console.log("📩 Requête reçue sur /api/users :", req.body);
-
+app.post("/api/users", adminLimiter, adminAuth, async (req, res) => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
@@ -172,13 +175,15 @@ app.post("/api/users", async (req, res) => {
       return res.status(400).json({ message: "Cet email est déjà utilisé." });
     }
 
-    const newUser = new User({ username, email, password });
+    // Mot de passe toujours haché avant stockage (jamais en clair).
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ username, email, password: hashedPassword });
     await newUser.save();
 
     res.status(201).json({ message: "Utilisateur créé avec succès !" });
   } catch (error) {
     console.error("❌ Erreur :", error);
-    res.status(500).json({ message: "Erreur serveur", error });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
@@ -188,12 +193,12 @@ app.get("/skills", async (req, res) => {
     const skills = await Skill.find();
     res.json(skills);
   } catch (error) {
-    res.status(500).json({ message: "Erreur serveur", error });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
-// ➤ Route pour ajouter une compétence
-app.post("/skills", authMiddleware, async (req, res) => {
+// ➤ Route pour ajouter une compétence (administration)
+app.post("/skills", adminLimiter, adminAuth, async (req, res) => {
   try {
     const { category, name, icon } = req.body;
     if (!category || !name || !icon) {
@@ -205,13 +210,19 @@ app.post("/skills", authMiddleware, async (req, res) => {
 
     res.status(201).json({ message: "✅ Compétence ajoutée avec succès !" });
   } catch (error) {
-    res.status(500).json({ message: "Erreur serveur", error });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
-app.get("/projects", async (req, res) => {
-  const projects = await Project.find();
-  res.json(projects);
+// Gestion centralisée des erreurs : jamais de stack trace en production.
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  const status = err.status || 500;
+  const payload = { error: status === 500 ? "Erreur serveur" : err.message };
+  if (process.env.NODE_ENV !== "production" && status === 500) {
+    payload.detail = err.message;
+  }
+  res.status(status).json(payload);
 });
 
 const server = app.listen(PORT, () => {
