@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import "dotenv/config"; // charge .env avant tout autre import (ex. client Anthropic de bipRoutes)
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -19,7 +19,6 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -72,6 +71,11 @@ const verifyToken = (token) => {
     return null;
   }
 };
+// ✅ Route de santé : réveille le serveur Render (pas d'auth, pas de DB)
+app.get("/health", (req, res) => {
+  res.status(200).json({ ok: true });
+});
+
 // ✅ Route de test
 app.get("/", (req, res) => {
   res.send("🚀 Backend Portfolio fonctionne !");
