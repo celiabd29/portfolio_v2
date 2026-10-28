@@ -2,6 +2,7 @@ import express from "express";
 import Message from "../models/Message.js";
 import adminAuth from "../middleware/adminAuth.js";
 import { adminLimiter, contactLimiter } from "../middleware/rateLimit.js";
+import { notifyNewMessage } from "../utils/notifyEmail.js";
 
 const router = express.Router();
 
@@ -33,6 +34,13 @@ router.post("/send", contactLimiter, async (req, res) => {
   try {
     const newMessage = new Message({ name, email, message });
     await newMessage.save();
+
+    // Notification email, non bloquante : un échec d'envoi ne doit jamais
+    // faire échouer l'enregistrement du message (déjà sauvegardé ci-dessus).
+    notifyNewMessage({ name, email, message }).catch((err) =>
+      console.error("Notification email échouée :", err.message)
+    );
+
     res.status(201).json({ message: "Message envoyé avec succès !" });
   } catch (error) {
     res.status(500).json({ error: "Erreur serveur" });
